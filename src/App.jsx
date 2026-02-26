@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Fitia from './assets/Fitia.png'
 
+/* ─── DATA ─── */
 const sections = [
   {
     id: 'l1',
     icon: '\u{1F393}',
-    title: 'LICENCE 1 (L1)',
+    badge: 'L1',
+    title: 'LICENCE 1',
     subtitle: 'Int\u00e9gration & R\u00e9ussite Acad\u00e9mique',
     intro:
       "L\u2019entr\u00e9e en premi\u00e8re ann\u00e9e constitue une \u00e9tape d\u00e9cisive. Notre priorit\u00e9 est de garantir une int\u00e9gration r\u00e9ussie et un accompagnement solide.",
@@ -24,7 +26,8 @@ const sections = [
   {
     id: 'l2',
     icon: '\u{1F393}',
-    title: 'LICENCE 2 (L2)',
+    badge: 'L2',
+    title: 'LICENCE 2',
     subtitle: "Construction de l\u2019Avenir",
     intro:
       "La deuxi\u00e8me ann\u00e9e doit pr\u00e9parer efficacement l\u2019\u00e9tudiant au monde professionnel.",
@@ -39,7 +42,8 @@ const sections = [
   {
     id: 'l3',
     icon: '\u{1F393}',
-    title: 'LICENCE 3 (L3)',
+    badge: 'L3',
+    title: 'LICENCE 3',
     subtitle: 'Insertion Professionnelle',
     intro:
       "L\u2019objectif principal est de faciliter la transition vers le monde du travail.",
@@ -57,7 +61,8 @@ const sections = [
   {
     id: 'm1',
     icon: '\u{1F393}',
-    title: 'MASTER 1 (M1)',
+    badge: 'M1',
+    title: 'MASTER 1',
     subtitle: 'Innovation & Leadership',
     intro:
       "Le Master 1 doit \u00eatre un tremplin vers l\u2019innovation et le leadership technologique.",
@@ -77,7 +82,8 @@ const sections = [
   {
     id: 'm2',
     icon: '\u{1F393}',
-    title: 'MASTER 2 (M2)',
+    badge: 'M2',
+    title: 'MASTER 2',
     subtitle: "Carri\u00e8re & H\u00e9ritage",
     intro:
       "La derni\u00e8re ann\u00e9e doit consolider l\u2019employabilit\u00e9 et laisser un h\u00e9ritage durable.",
@@ -94,7 +100,8 @@ const sections = [
   {
     id: 'tous',
     icon: '\u{1F3DB}',
-    title: 'POUR TOUS LES \u00c9TUDIANTS',
+    badge: 'ALL',
+    title: 'TOUS LES \u00c9TUDIANTS',
     subtitle: 'Actions Communes',
     intro: '',
     items: [
@@ -117,157 +124,397 @@ const sections = [
   },
 ]
 
-function SectionCard({ section, isOpen, onToggle }) {
+const stats = [
+  { value: '6', label: 'Niveaux couverts' },
+  { value: '80+', label: 'Actions concr\u00e8tes' },
+  { value: '100%', label: 'Transparence' },
+  { value: '1', label: 'Vision commune' },
+]
+
+/* ─── ICONS (inline SVG) ─── */
+const ChevronDown = ({ className }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+  </svg>
+)
+
+const PhoneIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+  </svg>
+)
+
+const MailIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+  </svg>
+)
+
+const MenuIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+  </svg>
+)
+
+const CloseIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+)
+
+/* ─── SECTION CARD ─── */
+function SectionCard({ section, isOpen, onToggle, index }) {
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden border border-brand-100 hover:shadow-lg transition-shadow">
+    <div
+      className="group bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-sm hover:shadow-xl hover:shadow-brand/5 transition-all duration-300 overflow-hidden"
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
       <button
         onClick={onToggle}
-        className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 focus:outline-none focus:ring-2 focus:ring-brand-300 rounded-xl"
+        className="w-full text-left px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 rounded-2xl"
       >
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{section.icon}</span>
-          <div>
-            <h3 className="text-lg font-bold text-brand-700">{section.title}</h3>
-            <p className="text-sm text-brand-400">{section.subtitle}</p>
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <span className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-brand to-brand-light flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-md shadow-brand/25">
+            {section.badge}
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">{section.title}</h3>
+            <p className="text-xs sm:text-sm text-gray-500 truncate">{section.subtitle}</p>
           </div>
         </div>
-        <svg
-          className={`w-5 h-5 text-brand transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronDown
+          className={`w-5 h-5 text-brand-400 transition-transform duration-300 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
+        />
       </button>
-      {isOpen && (
-        <div className="px-6 pb-6">
-          {section.intro && (
-            <p className="text-gray-600 mb-4 italic">{section.intro}</p>
-          )}
-          <ul className="space-y-2">
-            {section.items.map((item, i) => {
-              const colonIdx = item.indexOf(' : ')
-              const bold = colonIdx !== -1 ? item.slice(0, colonIdx) : item
-              const desc = colonIdx !== -1 ? item.slice(colonIdx + 3) : ''
-              return (
-                <li key={i} className="flex items-start gap-2">
-                  <span className="mt-1.5 h-2 w-2 rounded-full bg-brand flex-shrink-0" />
-                  <span className="text-gray-700">
-                    <strong className="text-brand-dark">{bold}</strong>
-                    {desc && <>{' : '}{desc}</>}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
+
+      <div
+        className={`grid transition-all duration-300 ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-4 sm:px-6 pb-5 sm:pb-6 pt-1">
+            {section.intro && (
+              <p className="text-gray-500 text-sm sm:text-base mb-4 pl-4 border-l-2 border-brand-200 italic">
+                {section.intro}
+              </p>
+            )}
+            <div className="grid gap-2 sm:gap-3">
+              {section.items.map((item, i) => {
+                const colonIdx = item.indexOf(' : ')
+                const bold = colonIdx !== -1 ? item.slice(0, colonIdx) : item
+                const desc = colonIdx !== -1 ? item.slice(colonIdx + 3) : ''
+                return (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 p-2.5 sm:p-3 rounded-xl bg-brand-50/50 hover:bg-brand-50 transition-colors"
+                  >
+                    <span className="mt-1 flex-shrink-0 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-brand-400" />
+                    <p className="text-sm sm:text-[0.94rem] text-gray-700 leading-relaxed">
+                      <strong className="text-brand-700 font-semibold">{bold}</strong>
+                      {desc && <span className="text-gray-600">{' \u2014 '}{desc}</span>}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
 
+/* ─── APP ─── */
 export default function App() {
   const [openSection, setOpenSection] = useState(null)
+  const [mobileMenu, setMobileMenu] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   const toggle = (id) => setOpenSection(openSection === id ? null : id)
 
+  const navLinks = [
+    { href: '#programme', label: 'Programme' },
+    { href: '#contact', label: 'Contact' },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-50">
-      {/* Navigation */}
-      <nav className="bg-brand shadow-lg sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={Fitia} alt="Fitia" className="h-10 w-10 rounded-full object-cover border-2 border-white" />
-            <span className="text-white font-bold text-lg tracking-wide">PROJET PR&Eacute;SIDENTIEL</span>
+    <div className="min-h-screen bg-gray-50 text-gray-900 antialiased">
+
+      {/* ─── NAVBAR ─── */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-white/80 backdrop-blur-xl shadow-lg shadow-brand/5 border-b border-gray-200/50'
+            : 'bg-transparent'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            {/* Logo */}
+            <a href="#" className="flex items-center gap-3 group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-brand rounded-xl rotate-6 scale-105 opacity-20 group-hover:rotate-12 transition-transform" />
+                <img
+                  src={Fitia}
+                  alt="Fi&quot;tia"
+                  className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl object-cover ring-2 ring-brand/30"
+                />
+              </div>
+              <div className="hidden sm:block">
+                <span className={`font-bold text-sm tracking-widest uppercase ${scrolled ? 'text-brand' : 'text-brand'}`}>
+                  Fi&quot;tia
+                </span>
+                <span className={`block text-[0.65rem] tracking-wider ${scrolled ? 'text-gray-400' : 'text-brand-300'}`}>
+                  Projet Pr&eacute;sidentiel AEENI
+                </span>
+              </div>
+            </a>
+
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    scrolled
+                      ? 'text-gray-600 hover:text-brand hover:bg-brand-50'
+                      : 'text-brand-700 hover:text-brand hover:bg-brand-50/50'
+                  }`}
+                >
+                  {link.label}
+                </a>
+              ))}
+              <a
+                href="#programme"
+                className="ml-3 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-brand/25 hover:shadow-lg hover:shadow-brand/30 transition-all active:scale-95"
+              >
+                Voir le programme
+              </a>
+            </div>
+
+            {/* Mobile Toggle */}
+            <button
+              onClick={() => setMobileMenu(!mobileMenu)}
+              className={`md:hidden p-2 rounded-lg transition-colors ${
+                scrolled ? 'text-gray-600 hover:bg-gray-100' : 'text-brand hover:bg-brand-50/50'
+              }`}
+            >
+              {mobileMenu ? <CloseIcon /> : <MenuIcon />}
+            </button>
           </div>
-          <a
-            href="#programme"
-            className="text-white/90 hover:text-white text-sm font-medium transition-colors"
-          >
-            Programme &darr;
-          </a>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenu && (
+          <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-xl">
+            <div className="px-4 py-4 space-y-1">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenu(false)}
+                  className="block px-4 py-3 rounded-xl text-gray-700 hover:text-brand hover:bg-brand-50 font-medium transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <a
+                href="#programme"
+                onClick={() => setMobileMenu(false)}
+                className="block text-center mt-2 bg-brand text-white font-semibold px-5 py-3 rounded-xl shadow-md"
+              >
+                Voir le programme
+              </a>
+            </div>
+          </div>
+        )}
       </nav>
 
-      {/* Hero */}
-      <header className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10">
-          <div className="md:w-1/2 text-center md:text-left">
-            <p className="text-brand font-semibold uppercase tracking-widest text-sm mb-2">
-              Candidat N&deg;1
-            </p>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
-              HERINIRINA Sitrakiniaina{' '}
-              <span className="text-brand">Fi&quot;tia</span>
-            </h1>
-            <div className="inline-block bg-brand/10 border border-brand/20 rounded-full px-6 py-2 mb-6">
-              <span className="text-brand font-bold text-lg">&laquo; Fi&quot;tia dia ampy &raquo;</span>
+      {/* ─── HERO ─── */}
+      <header className="relative min-h-[100svh] flex items-center overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-50 via-white to-brand-50/30" />
+        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand/[0.03] rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-brand/[0.04] rounded-full translate-y-1/3 -translate-x-1/4 blur-3xl" />
+
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.015]" style={{
+          backgroundImage: 'radial-gradient(circle, #1510AD 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 w-full">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left */}
+            <div className="text-center lg:text-left order-2 lg:order-1">
+              <div className="inline-flex items-center gap-2 bg-brand/5 border border-brand/10 rounded-full px-4 py-1.5 mb-6 animate-fade-in">
+                <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+                <span className="text-brand text-xs sm:text-sm font-semibold tracking-wide uppercase">
+                  Candidat N&deg;1 &mdash; AEENI
+                </span>
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight animate-fade-in-up">
+                <span className="text-gray-900">HERINIRINA</span>
+                <br />
+                <span className="text-gray-900">Sitrakiniaina</span>
+                <br />
+                <span className="bg-gradient-to-r from-brand to-brand-light bg-clip-text text-transparent">
+                  Fi&quot;tia
+                </span>
+              </h1>
+
+              <div className="mt-6 sm:mt-8 inline-flex items-center gap-2 bg-white rounded-2xl shadow-lg shadow-brand/5 border border-brand/10 px-5 sm:px-6 py-3 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                <span className="text-2xl">&laquo;</span>
+                <span className="text-brand font-bold text-base sm:text-lg tracking-wide">Fi&quot;tia dia ampy</span>
+                <span className="text-2xl">&raquo;</span>
+              </div>
+
+              <p className="mt-6 sm:mt-8 text-gray-500 text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+                Un projet ambitieux pour accompagner chaque &eacute;tudiant de l&rsquo;ENI, de la Licence au Master, vers la r&eacute;ussite acad&eacute;mique et l&rsquo;insertion professionnelle.
+              </p>
+
+              <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+                <a
+                  href="#programme"
+                  className="bg-brand hover:bg-brand-dark text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/30 transition-all active:scale-95 text-center"
+                >
+                  D&eacute;couvrir le programme
+                </a>
+                <a
+                  href="#contact"
+                  className="bg-white hover:bg-gray-50 text-gray-700 font-semibold px-7 py-3.5 rounded-xl border border-gray-200 shadow-sm hover:shadow transition-all active:scale-95 text-center"
+                >
+                  Me contacter
+                </a>
+              </div>
             </div>
-            <p className="text-gray-600 text-lg leading-relaxed max-w-lg">
-              Un projet ambitieux pour accompagner chaque &eacute;tudiant de l&rsquo;ENI, de la Licence 1 au Master 2, vers la r&eacute;ussite acad&eacute;mique et l&rsquo;insertion professionnelle.
-            </p>
-            <a
-              href="#programme"
-              className="inline-block mt-8 bg-brand hover:bg-brand-dark text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition-all"
-            >
-              D&eacute;couvrir le programme
-            </a>
+
+            {/* Right - Image */}
+            <div className="flex justify-center order-1 lg:order-2 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+              <div className="relative max-w-[280px] sm:max-w-[340px] lg:max-w-[400px]">
+                {/* Decorative elements */}
+                <div className="absolute -inset-6 sm:-inset-8 bg-gradient-to-br from-brand/10 to-brand-light/5 rounded-[2rem] rotate-3 blur-sm" />
+                <div className="absolute -inset-3 sm:-inset-4 bg-gradient-to-br from-brand/20 to-transparent rounded-[1.5rem] -rotate-2" />
+
+                <img
+                  src={Fitia}
+                  alt="HERINIRINA Sitrakiniaina Fi&quot;tia"
+                  className="relative w-full rounded-2xl sm:rounded-3xl shadow-2xl shadow-brand/15 object-cover aspect-[3/4]"
+                />
+
+                {/* Floating badge */}
+                <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 bg-white rounded-2xl shadow-xl shadow-brand/10 px-4 sm:px-5 py-2.5 sm:py-3 border border-brand/5">
+                  <p className="text-xs text-gray-400 font-medium">Matricule</p>
+                  <p className="text-brand font-bold text-sm sm:text-base">1740 H-F</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="md:w-1/2 flex justify-center">
-            <div className="relative">
-              <div className="absolute -inset-4 bg-brand/10 rounded-2xl rotate-3" />
-              <img
-                src={Fitia}
-                alt="Fitia"
-                className="relative rounded-2xl shadow-xl max-w-xs md:max-w-sm object-cover"
-              />
-            </div>
+
+          {/* Stats */}
+          <div className="mt-16 sm:mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
+            {stats.map((stat, i) => (
+              <div
+                key={i}
+                className="text-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm"
+              >
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-br from-brand to-brand-light bg-clip-text text-transparent">
+                  {stat.value}
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1 font-medium">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </header>
 
-      {/* Programme */}
-      <main id="programme" className="max-w-4xl mx-auto px-4 pb-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-gray-900">
-            Programme <span className="text-brand">Complet</span>
-          </h2>
-          <p className="text-gray-500 mt-2">
-            Cliquez sur chaque section pour d&eacute;couvrir les d&eacute;tails du projet.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {sections.map((section) => (
-            <SectionCard
-              key={section.id}
-              section={section}
-              isOpen={openSection === section.id}
-              onToggle={() => toggle(section.id)}
-            />
-          ))}
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-brand text-white">
-        <div className="max-w-6xl mx-auto px-4 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-center md:text-left">
-            <h3 className="text-xl font-bold mb-1">HERINIRINA Sitrakiniaina Fi&quot;tia</h3>
-            <p className="text-white/80 text-sm">Matricule : 1740 H-F &middot; Master 1 &ndash; IG</p>
+      {/* ─── PROGRAMME ─── */}
+      <section id="programme" className="relative py-16 sm:py-20 lg:py-28">
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section header */}
+          <div className="text-center mb-10 sm:mb-14">
+            <span className="inline-block text-brand text-xs sm:text-sm font-bold tracking-widest uppercase mb-3 bg-brand-50 px-4 py-1.5 rounded-full">
+              Notre Vision
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight">
+              Programme{' '}
+              <span className="bg-gradient-to-r from-brand to-brand-light bg-clip-text text-transparent">
+                Complet
+              </span>
+            </h2>
+            <p className="text-gray-500 mt-3 sm:mt-4 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
+              De la L1 au M2, chaque niveau b&eacute;n&eacute;ficie d&rsquo;actions concr&egrave;tes pour votre r&eacute;ussite. Cliquez pour explorer.
+            </p>
           </div>
-          <div className="flex flex-col items-center md:items-end gap-1 text-sm text-white/80">
-            <a href="tel:+261342509134" className="hover:text-white transition-colors">
-              &#x1F4DE; +261 34 25 091 34
-            </a>
-            <a href="mailto:herinirinafitia@gmail.com" className="hover:text-white transition-colors">
-              &#x1F4E7; herinirinafitia@gmail.com
-            </a>
+
+          {/* Cards */}
+          <div className="space-y-3 sm:space-y-4">
+            {sections.map((section, index) => (
+              <SectionCard
+                key={section.id}
+                section={section}
+                isOpen={openSection === section.id}
+                onToggle={() => toggle(section.id)}
+                index={index}
+              />
+            ))}
           </div>
         </div>
-        <div className="border-t border-white/20 text-center py-4 text-xs text-white/60">
-          &copy; 2026 Projet Pr&eacute;sidentiel Fi&quot;tia &mdash; Tous droits r&eacute;serv&eacute;s
+      </section>
+
+      {/* ─── CONTACT / FOOTER ─── */}
+      <footer id="contact" className="relative overflow-hidden">
+        {/* Top CTA band */}
+        <div className="bg-gradient-to-r from-brand via-brand-light to-brand">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white mb-3 sm:mb-4">
+              Ensemble, construisons l&rsquo;avenir de l&rsquo;ENI
+            </h3>
+            <p className="text-white/70 text-sm sm:text-base max-w-2xl mx-auto mb-6 sm:mb-8">
+              Le changement commence avec votre voix. Rejoignez le mouvement Fi&quot;tia.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              <a
+                href="tel:+261342509134"
+                className="inline-flex items-center justify-center gap-2 bg-white text-brand font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
+              >
+                <PhoneIcon />
+                <span>+261 34 25 091 34</span>
+              </a>
+              <a
+                href="mailto:herinirinafitia@gmail.com"
+                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-semibold px-6 py-3 rounded-xl transition-all active:scale-95"
+              >
+                <MailIcon />
+                <span>herinirinafitia@gmail.com</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom footer */}
+        <div className="bg-brand-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div>
+              <p className="text-white font-bold text-sm sm:text-base">
+                HERINIRINA Sitrakiniaina Fi&quot;tia
+              </p>
+              <p className="text-white/40 text-xs mt-0.5">
+                Master 1 &ndash; IG &middot; Matricule 1740 H-F
+              </p>
+            </div>
+            <p className="text-white/30 text-xs">
+              &copy; 2026 Projet Pr&eacute;sidentiel AEENI &mdash; Tous droits r&eacute;serv&eacute;s
+            </p>
+          </div>
         </div>
       </footer>
     </div>
