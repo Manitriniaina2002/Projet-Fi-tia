@@ -50,7 +50,7 @@ const sections = [
     items: [
       "Stages professionnels de qualit\u00e9 : Mise en place de partenariats solides avec des entreprises.",
       "Ateliers de pr\u00e9paration professionnelle : Perfectionnement des CV, simulations d\u2019entretien.",
-      "Speed Recruiting ENI : Organisation de journ\u00e9es de recrutement direct au sein de l\u2019ENI.",
+      "Speed Recruiting AEENI : Organisation de journ\u00e9es de recrutement direct au sein de l\u2019AEENI.",
       "Mobilisation du r\u00e9seau des anciens : Activation du r\u00e9seau Alumni pour ouvrir des opportunit\u00e9s.",
       "Atelier pr\u00e9-soutenance : Simulations de soutenance avec des jurys professionnels.",
       "Pratique serveur avanc\u00e9e : Sessions techniques pratiques pour renforcer les comp\u00e9tences.",
@@ -111,7 +111,7 @@ const sections = [
       "Transparence financi\u00e8re : Publication mensuelle des rapports financiers.",
       "Repr\u00e9sentants par niveau : Participation active de chaque promotion dans la gouvernance.",
       "\u00c9v\u00e9nements phares : Tech Week, Festival \u00e9tudiant, Solidarit\u00e9 Day.",
-      "Hackathon ENI : Comp\u00e9tition annuelle de programmation.",
+      "Hackathon AEENI : Comp\u00e9tition annuelle de programmation.",
       "Vie \u00e9tudiante dynamique : Activit\u00e9s \u00e9ducatives et festives.",
       "Soutien aux clubs : Budget structur\u00e9, calendrier annuel et accompagnement.",
       "Connexion sp\u00e9ciale AEENI : Acc\u00e8s internet d\u00e9di\u00e9.",
@@ -377,7 +377,7 @@ export default function App() {
               </div>
 
               <p className="mt-6 sm:mt-8 text-gray-500 text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-                Un projet ambitieux pour accompagner chaque &eacute;tudiant de l&rsquo;ENI, de la Licence au Master, vers la r&eacute;ussite acad&eacute;mique et l&rsquo;insertion professionnelle.
+                Un projet ambitieux pour accompagner chaque &eacute;tudiant de l&rsquo;AEENI, de la Licence au Master, vers la r&eacute;ussite acad&eacute;mique et l&rsquo;insertion professionnelle.
               </p>
 
               <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start animate-fade-in-up" style={{ animationDelay: '400ms' }}>
@@ -476,7 +476,7 @@ export default function App() {
         <div className="bg-gradient-to-r from-brand via-brand-light to-brand">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
             <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white mb-3 sm:mb-4">
-              Ensemble, construisons l&rsquo;avenir de l&rsquo;ENI
+              Ensemble, construisons l&rsquo;avenir de l&rsquo;AEENI
             </h3>
             <p className="text-white/70 text-sm sm:text-base max-w-2xl mx-auto mb-6 sm:mb-8">
               Le changement commence avec votre voix. Rejoignez le mouvement Fi&quot;tia.
