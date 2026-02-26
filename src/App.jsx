@@ -100,7 +100,7 @@ const sections = [
   {
     id: 'tous',
     icon: '\u{1F3DB}',
-    badge: 'ALL',
+    badge: 'Pour Tous',
     title: 'TOUS LES \u00c9TUDIANTS',
     subtitle: 'Actions Communes',
     intro: '',
@@ -240,6 +240,7 @@ export default function App() {
   const navLinks = [
     { href: '#programme', label: 'Programme' },
     { href: '#contact', label: 'Contact' },
+    { href: 'https://web.facebook.com/Herinifitia', label: 'Facebook', external: true },
   ]
 
   return (
@@ -281,6 +282,7 @@ export default function App() {
                 <a
                   key={link.href}
                   href={link.href}
+                  {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     scrolled
                       ? 'text-gray-600 hover:text-brand hover:bg-brand-50'
@@ -290,12 +292,6 @@ export default function App() {
                   {link.label}
                 </a>
               ))}
-              <a
-                href="#programme"
-                className="ml-3 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-brand/25 hover:shadow-lg hover:shadow-brand/30 transition-all active:scale-95"
-              >
-                Voir le programme
-              </a>
             </div>
 
             {/* Mobile Toggle */}
@@ -319,18 +315,12 @@ export default function App() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenu(false)}
+                  {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className="block px-4 py-3 rounded-xl text-gray-700 hover:text-brand hover:bg-brand-50 font-medium transition-colors"
                 >
                   {link.label}
                 </a>
               ))}
-              <a
-                href="#programme"
-                onClick={() => setMobileMenu(false)}
-                className="block text-center mt-2 bg-brand text-white font-semibold px-5 py-3 rounded-xl shadow-md"
-              >
-                Voir le programme
-              </a>
             </div>
           </div>
         )}
