@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Fitia from './assets/Fitia.png'
+import Anthem from "./assets/Prezida Fi''Tia.mp3"
 
 /* ─── ANIMATED BACKGROUND ─── */
 const BRAND        = '21, 16, 173'
@@ -47,15 +48,15 @@ function AnimatedBackground() {
     const H = canvas.height = window.innerHeight
 
     /* ── LAYER 1: Network nodes ── */
-    const NODE_COUNT = Math.min(80, Math.floor((W * H) / 12000))
-    const DIST       = Math.min(180, W * 0.14)
+    const NODE_COUNT = Math.min(60, Math.floor((W * H) / 18000))
+    const DIST       = Math.min(150, W * 0.11)
     const nodes = Array.from({ length: NODE_COUNT }, () => ({
       x:  Math.random() * W,
       y:  Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35,
-      r:  Math.random() * 2.5 + 1.5,
-      o:  Math.random() * 0.55 + 0.35,
+      vx: (Math.random() - 0.5) * 0.28,
+      vy: (Math.random() - 0.5) * 0.28,
+      r:  Math.random() * 2 + 1.2,
+      o:  Math.random() * 0.2 + 0.08,
     }))
 
     /* ── LAYER 2: Matrix / hacker rain ── */
@@ -70,12 +71,12 @@ function AnimatedBackground() {
         HACKER_CHARS[Math.floor(Math.random() * HACKER_CHARS.length)]),
       tick:   0,
       chgEvery: Math.floor(Math.random() * 8 + 3),
-      active: Math.random() > 0.40,
+      active: Math.random() > 0.72,
       delay:  Math.floor(Math.random() * 240),
     }))
 
     /* ── LAYER 3: Typed code snippets (dev) ── */
-    const SNIP_CNT = Math.min(20, Math.floor((W * H) / 45000))
+    const SNIP_CNT = Math.min(12, Math.floor((W * H) / 75000))
     const snips = Array.from({ length: SNIP_CNT }, () => {
       const text = CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)]
       return {
@@ -124,8 +125,8 @@ function AnimatedBackground() {
           const d  = Math.sqrt(dx * dx + dy * dy)
           if (d < DIST) {
             ctx.beginPath()
-            ctx.strokeStyle = `rgba(${BRAND}, ${(1 - d / DIST) * 0.45})`
-            ctx.lineWidth   = 1
+            ctx.strokeStyle = `rgba(${BRAND}, ${(1 - d / DIST) * 0.10})`
+            ctx.lineWidth   = 0.6
             ctx.moveTo(nodes[i].x, nodes[i].y)
             ctx.lineTo(nodes[j].x, nodes[j].y)
             ctx.stroke()
@@ -139,8 +140,8 @@ function AnimatedBackground() {
         ctx.fill()
         ctx.beginPath()
         ctx.arc(n.x, n.y, n.r + 2.5, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(${BRAND}, ${n.o * 0.5})`
-        ctx.lineWidth   = 1.5
+        ctx.strokeStyle = `rgba(${BRAND}, ${n.o * 0.2})`
+        ctx.lineWidth   = 0.8
         ctx.stroke()
         n.x += n.vx; n.y += n.vy
         if (n.x < 0 || n.x > W) n.vx *= -1
@@ -164,10 +165,10 @@ function AnimatedBackground() {
         for (let i = 0; i < col.len; i++) {
           const cy = col.y - i * COL_SZ
           if (cy < -COL_SZ || cy > H + COL_SZ) continue
-          const alpha = i === 0 ? 0.95 : (1 - i / col.len) * 0.55
+          const alpha = i === 0 ? 0.45 : (1 - i / col.len) * 0.10
           // head glows lighter blue-white; trail is brand color
           ctx.fillStyle = i === 0
-            ? `rgba(200, 230, 255, ${alpha})`
+            ? `rgba(180, 210, 255, ${alpha})`
             : `rgba(${BRAND}, ${alpha})`
           ctx.fillText(col.chars[i % col.chars.length], col.x, cy)
         }
@@ -189,7 +190,7 @@ function AnimatedBackground() {
             if (snip.revealed < snip.text.length) snip.revealed++
             else { snip.phase = 'show'; snip.phaseTick = 0 }
           }
-          snip.o = Math.min(0.72, snip.o + 0.018)
+          snip.o = Math.min(0.18, snip.o + 0.008)
         } else if (snip.phase === 'show') {
           snip.phaseTick++
           if (snip.phaseTick >= snip.showDur) snip.phase = 'out'
@@ -216,7 +217,7 @@ function AnimatedBackground() {
 
         // soft pill background
         const tw = ctx.measureText(snip.text).width
-        ctx.fillStyle = `rgba(21,16,173,${snip.o * 0.18})`
+        ctx.fillStyle = `rgba(21,16,173,${snip.o * 0.06})`
         if (ctx.roundRect) {
           ctx.beginPath()
           ctx.roundRect(snip.x - 7, snip.y - snip.size, tw + 18, snip.size + 10, 4)
@@ -251,6 +252,171 @@ function AnimatedBackground() {
       className="fixed inset-0 w-full h-full pointer-events-none"
       style={{ zIndex: 0 }}
     />
+  )
+}
+
+/* ─── ANTHEM PLAYER ─── */
+function AnthemPlayer() {
+  const audioRef = useRef(null)
+  const [playing, setPlaying]   = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [volume, setVolume]     = useState(0.7)
+  const [expanded, setExpanded] = useState(false)
+
+  const fmt = (s) => {
+    if (!s || isNaN(s)) return '0:00'
+    const m = Math.floor(s / 60)
+    const sec = Math.floor(s % 60)
+    return `${m}:${sec.toString().padStart(2, '0')}`
+  }
+
+  const toggle = () => {
+    const a = audioRef.current
+    if (!a) return
+    if (playing) { a.pause(); setPlaying(false) }
+    else { a.play().then(() => setPlaying(true)).catch(() => {}) }
+  }
+
+  useEffect(() => {
+    const a = audioRef.current
+    if (!a) return
+    a.volume = volume
+    const onTime  = () => setProgress(a.currentTime)
+    const onMeta  = () => setDuration(a.duration)
+    const onEnded = () => setPlaying(false)
+    a.addEventListener('timeupdate', onTime)
+    a.addEventListener('loadedmetadata', onMeta)
+    a.addEventListener('ended', onEnded)
+    return () => {
+      a.removeEventListener('timeupdate', onTime)
+      a.removeEventListener('loadedmetadata', onMeta)
+      a.removeEventListener('ended', onEnded)
+    }
+  }, [volume])
+
+  const seek = (e) => {
+    const a = audioRef.current
+    if (!a || !duration) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    a.currentTime = ((e.clientX - rect.left) / rect.width) * duration
+  }
+
+  const pct = duration ? (progress / duration) * 100 : 0
+
+  return (
+    <div className={`fixed bottom-5 right-5 z-50 transition-all duration-300 ${expanded ? 'w-72' : 'w-auto'}`}>
+      <audio ref={audioRef} src={Anthem} preload="metadata" />
+
+      {/* Compact pill when collapsed */}
+      {!expanded && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="flex items-center gap-2.5 bg-white/90 backdrop-blur-xl border border-brand/10 shadow-xl shadow-brand/10 rounded-full px-4 py-2.5 hover:bg-white transition-all group"
+        >
+          {/* animated bars */}
+          <span className="flex items-end gap-[3px] h-4">
+            {[1, 0.6, 0.85, 0.5, 0.75].map((h, i) => (
+              <span
+                key={i}
+                className={`w-[3px] rounded-full bg-brand transition-all ${playing ? 'animate-pulse' : ''}`}
+                style={{ height: `${h * 16}px`, animationDelay: `${i * 80}ms`, opacity: playing ? 1 : 0.35 }}
+              />
+            ))}
+          </span>
+          <span className="text-brand font-semibold text-xs tracking-wide whitespace-nowrap">
+            Hymne officiel
+          </span>
+        </button>
+      )}
+
+      {/* Expanded player card */}
+      {expanded && (
+        <div className="bg-white/90 backdrop-blur-xl border border-brand/10 shadow-2xl shadow-brand/10 rounded-2xl p-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-brand font-bold text-sm leading-tight">Hymne officiel</p>
+              <p className="text-gray-400 text-[10px] mt-0.5 tracking-wide">Fi&quot;tia — AEENI 2026</p>
+            </div>
+            <button onClick={() => setExpanded(false)} className="text-gray-300 hover:text-gray-500 transition-colors text-lg leading-none">&times;</button>
+          </div>
+
+          {/* Waveform-like bars decoration */}
+          <div className="flex items-end justify-center gap-[3px] h-8 mb-3">
+            {Array.from({ length: 28 }, (_, i) => {
+              const barPct = (i / 28) * 100
+              const active = barPct <= pct
+              const h = 8 + Math.sin(i * 0.8) * 6 + Math.cos(i * 0.4) * 4
+              return (
+                <span
+                  key={i}
+                  className="w-[5px] rounded-full transition-colors duration-150"
+                  style={{
+                    height: `${Math.max(4, h * (playing ? 1 + Math.sin(Date.now() / 300 + i) * 0.2 : 1))}px`,
+                    backgroundColor: active ? '#1510AD' : '#E5E7EB',
+                  }}
+                />
+              )
+            })}
+          </div>
+
+          {/* Progress bar */}
+          <div
+            className="w-full h-1.5 bg-gray-100 rounded-full cursor-pointer mb-1.5 overflow-hidden"
+            onClick={seek}
+          >
+            <div
+              className="h-full bg-gradient-to-r from-brand to-brand-light rounded-full transition-all"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-gray-400 mb-3">
+            <span>{fmt(progress)}</span>
+            <span>{fmt(duration)}</span>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Volume */}
+            <div className="flex items-center gap-1.5 flex-1">
+              <span className="text-gray-400 text-xs">🔈</span>
+              <input
+                type="range" min="0" max="1" step="0.05"
+                value={volume}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value)
+                  setVolume(v)
+                  if (audioRef.current) audioRef.current.volume = v
+                }}
+                className="w-full accent-brand h-1 cursor-pointer"
+              />
+            </div>
+
+            {/* Play/Pause */}
+            <button
+              onClick={toggle}
+              className="w-10 h-10 rounded-full bg-brand hover:bg-brand-dark text-white flex items-center justify-center shadow-md shadow-brand/25 transition-all active:scale-95 flex-shrink-0"
+            >
+              {playing
+                ? <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                : <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              }
+            </button>
+
+            {/* Restart */}
+            <button
+              onClick={() => { if (audioRef.current) audioRef.current.currentTime = 0 }}
+              className="text-gray-400 hover:text-brand transition-colors flex-shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v6h6M21 17A9 9 0 1 1 6.22 4.22" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -583,7 +749,7 @@ export default function App() {
       {/* ─── HERO ─── */}
       <header className="relative min-h-[100svh] flex items-center overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-50/40 via-white/40 to-brand-50/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-50/70 via-white/70 to-brand-50/30" />
         <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand/[0.03] rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-brand/[0.04] rounded-full translate-y-1/3 -translate-x-1/4 blur-3xl" />
 
@@ -681,7 +847,7 @@ export default function App() {
 
       {/* ─── PROGRAMME ─── */}
       <section id="programme" className="relative py-16 sm:py-20 lg:py-28">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50/55 to-white/55" />
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50/85 to-white/85" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section header */}
           <div className="text-center mb-10 sm:mb-14">
@@ -761,6 +927,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      <AnthemPlayer />
     </div>
   )
 }
