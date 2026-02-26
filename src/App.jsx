@@ -47,19 +47,19 @@ function AnimatedBackground() {
     const H = canvas.height = window.innerHeight
 
     /* ── LAYER 1: Network nodes ── */
-    const NODE_COUNT = Math.min(60, Math.floor((W * H) / 18000))
-    const DIST       = Math.min(150, W * 0.11)
+    const NODE_COUNT = Math.min(80, Math.floor((W * H) / 12000))
+    const DIST       = Math.min(180, W * 0.14)
     const nodes = Array.from({ length: NODE_COUNT }, () => ({
       x:  Math.random() * W,
       y:  Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      r:  Math.random() * 2 + 1.5,
-      o:  Math.random() * 0.4 + 0.1,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      r:  Math.random() * 2.5 + 1.5,
+      o:  Math.random() * 0.55 + 0.35,
     }))
 
     /* ── LAYER 2: Matrix / hacker rain ── */
-    const COL_SZ  = 16
+    const COL_SZ  = 15
     const COL_CNT = Math.floor(W / COL_SZ)
     const rain = Array.from({ length: COL_CNT }, (_, i) => ({
       x:      i * COL_SZ,
@@ -70,12 +70,12 @@ function AnimatedBackground() {
         HACKER_CHARS[Math.floor(Math.random() * HACKER_CHARS.length)]),
       tick:   0,
       chgEvery: Math.floor(Math.random() * 8 + 3),
-      active: Math.random() > 0.62,
+      active: Math.random() > 0.40,
       delay:  Math.floor(Math.random() * 240),
     }))
 
     /* ── LAYER 3: Typed code snippets (dev) ── */
-    const SNIP_CNT = Math.min(14, Math.floor((W * H) / 70000))
+    const SNIP_CNT = Math.min(20, Math.floor((W * H) / 45000))
     const snips = Array.from({ length: SNIP_CNT }, () => {
       const text = CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)]
       return {
@@ -124,8 +124,8 @@ function AnimatedBackground() {
           const d  = Math.sqrt(dx * dx + dy * dy)
           if (d < DIST) {
             ctx.beginPath()
-            ctx.strokeStyle = `rgba(${BRAND}, ${(1 - d / DIST) * 0.14})`
-            ctx.lineWidth   = 0.7
+            ctx.strokeStyle = `rgba(${BRAND}, ${(1 - d / DIST) * 0.45})`
+            ctx.lineWidth   = 1
             ctx.moveTo(nodes[i].x, nodes[i].y)
             ctx.lineTo(nodes[j].x, nodes[j].y)
             ctx.stroke()
@@ -139,8 +139,8 @@ function AnimatedBackground() {
         ctx.fill()
         ctx.beginPath()
         ctx.arc(n.x, n.y, n.r + 2.5, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(${BRAND}, ${n.o * 0.22})`
-        ctx.lineWidth   = 1
+        ctx.strokeStyle = `rgba(${BRAND}, ${n.o * 0.5})`
+        ctx.lineWidth   = 1.5
         ctx.stroke()
         n.x += n.vx; n.y += n.vy
         if (n.x < 0 || n.x > W) n.vx *= -1
@@ -164,10 +164,10 @@ function AnimatedBackground() {
         for (let i = 0; i < col.len; i++) {
           const cy = col.y - i * COL_SZ
           if (cy < -COL_SZ || cy > H + COL_SZ) continue
-          const alpha = i === 0 ? 0.6 : (1 - i / col.len) * 0.16
+          const alpha = i === 0 ? 0.95 : (1 - i / col.len) * 0.55
           // head glows lighter blue-white; trail is brand color
           ctx.fillStyle = i === 0
-            ? `rgba(180, 210, 255, ${alpha})`
+            ? `rgba(200, 230, 255, ${alpha})`
             : `rgba(${BRAND}, ${alpha})`
           ctx.fillText(col.chars[i % col.chars.length], col.x, cy)
         }
@@ -189,7 +189,7 @@ function AnimatedBackground() {
             if (snip.revealed < snip.text.length) snip.revealed++
             else { snip.phase = 'show'; snip.phaseTick = 0 }
           }
-          snip.o = Math.min(0.28, snip.o + 0.012)
+          snip.o = Math.min(0.72, snip.o + 0.018)
         } else if (snip.phase === 'show') {
           snip.phaseTick++
           if (snip.phaseTick >= snip.showDur) snip.phase = 'out'
@@ -216,7 +216,7 @@ function AnimatedBackground() {
 
         // soft pill background
         const tw = ctx.measureText(snip.text).width
-        ctx.fillStyle = `rgba(21,16,173,${snip.o * 0.07})`
+        ctx.fillStyle = `rgba(21,16,173,${snip.o * 0.18})`
         if (ctx.roundRect) {
           ctx.beginPath()
           ctx.roundRect(snip.x - 7, snip.y - snip.size, tw + 18, snip.size + 10, 4)
@@ -583,7 +583,7 @@ export default function App() {
       {/* ─── HERO ─── */}
       <header className="relative min-h-[100svh] flex items-center overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-50/80 via-white/80 to-brand-50/30 backdrop-blur-[1px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-50/40 via-white/40 to-brand-50/10" />
         <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand/[0.03] rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-brand/[0.04] rounded-full translate-y-1/3 -translate-x-1/4 blur-3xl" />
 
@@ -681,7 +681,7 @@ export default function App() {
 
       {/* ─── PROGRAMME ─── */}
       <section id="programme" className="relative py-16 sm:py-20 lg:py-28">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50/95 to-white/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50/55 to-white/55" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section header */}
           <div className="text-center mb-10 sm:mb-14">
