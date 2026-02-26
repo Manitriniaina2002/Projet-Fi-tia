@@ -2,8 +2,40 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Fitia from './assets/Fitia.png'
 
 /* ─── ANIMATED BACKGROUND ─── */
-const GLYPHS = '01{}[]<>/\\;:()#&%$@!?=+*~ABCDEFабвгΩΔΣπλφψ░▒▓█'
-const BRAND = '21, 16, 173'   // #1510AD as r,g,b
+const BRAND        = '21, 16, 173'
+const HACKER_CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ01アbcdefABCDEF{}[]<>/\\;:()#&$@!?'
+const CODE_SNIPPETS = [
+  'const fn = () => {}',
+  'if (err) throw err',
+  'await fetch("/api")',
+  'npm install --save',
+  'git commit -m "fix"',
+  'docker build -t app .',
+  'SELECT * FROM users',
+  'for (let i=0;i<n;i++)',
+  'import React from "react"',
+  'export default App',
+  'return res.json(data)',
+  'console.log("debug")',
+  'async function main() {}',
+  '.map(x => x * 2)',
+  'try {} catch(e) {}',
+  'ssh -i key.pem user@host',
+  'grep -r "pattern" .',
+  'curl -X POST /api/v1',
+  '// TODO: refactor this',
+  'pip install numpy pandas',
+  'def __init__(self):',
+  'class Node extends React.Component',
+  'setState({ loading: true })',
+  'useEffect(() => {}, [])',
+  'const [s, setS] = useState(null)',
+  'git push origin main',
+  'yarn build --production',
+  'type RequestBody = {}',
+  'interface ApiResponse<T>',
+  'z.object({ id: z.string() })',
+]
 
 function AnimatedBackground() {
   const canvasRef = useRef(null)
@@ -14,105 +46,192 @@ function AnimatedBackground() {
     const W = canvas.width  = window.innerWidth
     const H = canvas.height = window.innerHeight
 
-    const COUNT  = Math.min(80, Math.floor((W * H) / 14000))
-    const GCOUNT = Math.min(30, Math.floor((W * H) / 30000))
-    const DIST   = Math.min(160, W * 0.12)
-
-    const nodes = Array.from({ length: COUNT }, () => ({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35,
-      r: Math.random() * 2 + 1.5,
-      o: Math.random() * 0.5 + 0.15,
+    /* ── LAYER 1: Network nodes ── */
+    const NODE_COUNT = Math.min(60, Math.floor((W * H) / 18000))
+    const DIST       = Math.min(150, W * 0.11)
+    const nodes = Array.from({ length: NODE_COUNT }, () => ({
+      x:  Math.random() * W,
+      y:  Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r:  Math.random() * 2 + 1.5,
+      o:  Math.random() * 0.4 + 0.1,
     }))
 
-    const glyphs = Array.from({ length: GCOUNT }, () => ({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      char: GLYPHS[Math.floor(Math.random() * GLYPHS.length)],
-      speed: Math.random() * 0.4 + 0.1,
-      o: Math.random() * 0.12 + 0.04,
-      size: Math.random() * 8 + 9,
-      tick: 0,
-      interval: Math.floor(Math.random() * 120 + 60),
+    /* ── LAYER 2: Matrix / hacker rain ── */
+    const COL_SZ  = 16
+    const COL_CNT = Math.floor(W / COL_SZ)
+    const rain = Array.from({ length: COL_CNT }, (_, i) => ({
+      x:      i * COL_SZ,
+      y:      Math.random() * H * -1,
+      speed:  Math.random() * 1.4 + 0.5,
+      len:    Math.floor(Math.random() * 20 + 8),
+      chars:  Array.from({ length: 30 }, () =>
+        HACKER_CHARS[Math.floor(Math.random() * HACKER_CHARS.length)]),
+      tick:   0,
+      chgEvery: Math.floor(Math.random() * 8 + 3),
+      active: Math.random() > 0.62,
+      delay:  Math.floor(Math.random() * 240),
     }))
 
-    stateRef.current = { W, H, nodes, glyphs, DIST }
+    /* ── LAYER 3: Typed code snippets (dev) ── */
+    const SNIP_CNT = Math.min(14, Math.floor((W * H) / 70000))
+    const snips = Array.from({ length: SNIP_CNT }, () => {
+      const text = CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)]
+      return {
+        text,
+        x:        Math.random() * (W - 240),
+        y:        Math.random() * H,
+        revealed: 0,
+        typeTick: 0,
+        typeSpd:  Math.floor(Math.random() * 4 + 3),
+        vy:       -(Math.random() * 0.18 + 0.04),
+        o:        0,
+        phase:    'in',
+        phaseTick:0,
+        showDur:  Math.floor(Math.random() * 200 + 100),
+        size:     Math.random() * 3 + 9,
+      }
+    })
+
+    stateRef.current = { W, H, nodes, DIST, rain, COL_SZ, snips }
   }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-
     init(canvas)
 
     const handleResize = () => init(canvas)
     window.addEventListener('resize', handleResize, { passive: true })
 
+    let frame = 0
+
     const draw = () => {
       const s = stateRef.current
       if (!s) return
-      const { W, H, nodes, glyphs, DIST } = s
+      const { W, H, nodes, DIST, rain, COL_SZ, snips } = s
+      frame++
 
       ctx.clearRect(0, 0, W, H)
 
-      // ── Lines ──
+      /* ══ LAYER 1: Network ══ */
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const dx = nodes[i].x - nodes[j].x
           const dy = nodes[i].y - nodes[j].y
           const d  = Math.sqrt(dx * dx + dy * dy)
           if (d < DIST) {
-            const alpha = (1 - d / DIST) * 0.18
             ctx.beginPath()
-            ctx.strokeStyle = `rgba(${BRAND}, ${alpha})`
-            ctx.lineWidth   = 0.8
+            ctx.strokeStyle = `rgba(${BRAND}, ${(1 - d / DIST) * 0.14})`
+            ctx.lineWidth   = 0.7
             ctx.moveTo(nodes[i].x, nodes[i].y)
             ctx.lineTo(nodes[j].x, nodes[j].y)
             ctx.stroke()
           }
         }
       }
-
-      // ── Nodes ──
       nodes.forEach((n) => {
         ctx.beginPath()
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(${BRAND}, ${n.o})`
         ctx.fill()
-
-        // glow ring
         ctx.beginPath()
-        ctx.arc(n.x, n.y, n.r + 2, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(${BRAND}, ${n.o * 0.3})`
+        ctx.arc(n.x, n.y, n.r + 2.5, 0, Math.PI * 2)
+        ctx.strokeStyle = `rgba(${BRAND}, ${n.o * 0.22})`
         ctx.lineWidth   = 1
         ctx.stroke()
-
-        // move
-        n.x += n.vx
-        n.y += n.vy
+        n.x += n.vx; n.y += n.vy
         if (n.x < 0 || n.x > W) n.vx *= -1
         if (n.y < 0 || n.y > H) n.vy *= -1
       })
 
-      // ── Glyphs ──
-      glyphs.forEach((g) => {
-        ctx.font         = `${g.size}px 'Courier New', monospace`
-        ctx.fillStyle    = `rgba(${BRAND}, ${g.o})`
-        ctx.fillText(g.char, g.x, g.y)
-
-        g.y -= g.speed
-        g.tick++
-        if (g.tick >= g.interval) {
-          g.char     = GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
-          g.tick     = 0
-          g.interval = Math.floor(Math.random() * 120 + 60)
+      /* ══ LAYER 2: Matrix / hacker rain ══ */
+      ctx.font = `bold ${COL_SZ - 2}px 'Courier New', monospace`
+      rain.forEach((col) => {
+        if (col.delay > 0) { col.delay--; return }
+        if (!col.active) {
+          if (Math.random() < 0.0025) col.active = true
+          return
         }
-        if (g.y < -20) {
-          g.y = H + 10
-          g.x = Math.random() * W
+        col.tick++
+        if (col.tick >= col.chgEvery) {
+          col.tick = 0
+          const ri = Math.floor(Math.random() * col.chars.length)
+          col.chars[ri] = HACKER_CHARS[Math.floor(Math.random() * HACKER_CHARS.length)]
+        }
+        for (let i = 0; i < col.len; i++) {
+          const cy = col.y - i * COL_SZ
+          if (cy < -COL_SZ || cy > H + COL_SZ) continue
+          const alpha = i === 0 ? 0.6 : (1 - i / col.len) * 0.16
+          // head glows lighter blue-white; trail is brand color
+          ctx.fillStyle = i === 0
+            ? `rgba(180, 210, 255, ${alpha})`
+            : `rgba(${BRAND}, ${alpha})`
+          ctx.fillText(col.chars[i % col.chars.length], col.x, cy)
+        }
+        col.y += col.speed
+        if (col.y - col.len * COL_SZ > H) {
+          col.y      = -COL_SZ
+          col.active = Math.random() > 0.28
+          col.speed  = Math.random() * 1.4 + 0.5
+          col.len    = Math.floor(Math.random() * 20 + 8)
+        }
+      })
+
+      /* ══ LAYER 3: Floating typed code (dev) ══ */
+      snips.forEach((snip) => {
+        if (snip.phase === 'in') {
+          snip.typeTick++
+          if (snip.typeTick >= snip.typeSpd) {
+            snip.typeTick = 0
+            if (snip.revealed < snip.text.length) snip.revealed++
+            else { snip.phase = 'show'; snip.phaseTick = 0 }
+          }
+          snip.o = Math.min(0.28, snip.o + 0.012)
+        } else if (snip.phase === 'show') {
+          snip.phaseTick++
+          if (snip.phaseTick >= snip.showDur) snip.phase = 'out'
+        } else {
+          snip.o = Math.max(0, snip.o - 0.008)
+          if (snip.o <= 0) {
+            snip.text     = CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)]
+            snip.x        = Math.random() * (W - 240)
+            snip.y        = H + 20
+            snip.revealed = 0
+            snip.typeTick = 0
+            snip.phase    = 'in'
+            snip.showDur  = Math.floor(Math.random() * 200 + 100)
+            snip.o        = 0
+            snip.vy       = -(Math.random() * 0.18 + 0.04)
+          }
+        }
+        snip.y += snip.vy
+
+        const visible = snip.text.slice(0, snip.revealed)
+        if (!visible.length) return
+
+        ctx.font = `${snip.size}px 'Courier New', monospace`
+
+        // soft pill background
+        const tw = ctx.measureText(snip.text).width
+        ctx.fillStyle = `rgba(21,16,173,${snip.o * 0.07})`
+        if (ctx.roundRect) {
+          ctx.beginPath()
+          ctx.roundRect(snip.x - 7, snip.y - snip.size, tw + 18, snip.size + 10, 4)
+          ctx.fill()
+        }
+
+        // syntax-lite coloring: keywords bluish, rest normal
+        ctx.fillStyle = `rgba(${BRAND},${snip.o})`
+        ctx.fillText(visible, snip.x, snip.y)
+
+        // blinking cursor while typing
+        if (snip.phase === 'in' && frame % 28 < 18) {
+          const cw = ctx.measureText(visible).width
+          ctx.fillStyle = `rgba(${BRAND},${Math.min(1, snip.o * 3)})`
+          ctx.fillRect(snip.x + cw + 1, snip.y - snip.size + 2, 2, snip.size)
         }
       })
 
@@ -120,7 +239,6 @@ function AnimatedBackground() {
     }
 
     rafRef.current = requestAnimationFrame(draw)
-
     return () => {
       cancelAnimationFrame(rafRef.current)
       window.removeEventListener('resize', handleResize)
