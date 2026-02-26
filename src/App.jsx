@@ -1,5 +1,140 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Fitia from './assets/Fitia.png'
+
+/* ─── ANIMATED BACKGROUND ─── */
+const GLYPHS = '01{}[]<>/\\;:()#&%$@!?=+*~ABCDEFабвгΩΔΣπλφψ░▒▓█'
+const BRAND = '21, 16, 173'   // #1510AD as r,g,b
+
+function AnimatedBackground() {
+  const canvasRef = useRef(null)
+  const rafRef    = useRef(null)
+  const stateRef  = useRef(null)
+
+  const init = useCallback((canvas) => {
+    const W = canvas.width  = window.innerWidth
+    const H = canvas.height = window.innerHeight
+
+    const COUNT  = Math.min(80, Math.floor((W * H) / 14000))
+    const GCOUNT = Math.min(30, Math.floor((W * H) / 30000))
+    const DIST   = Math.min(160, W * 0.12)
+
+    const nodes = Array.from({ length: COUNT }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      r: Math.random() * 2 + 1.5,
+      o: Math.random() * 0.5 + 0.15,
+    }))
+
+    const glyphs = Array.from({ length: GCOUNT }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      char: GLYPHS[Math.floor(Math.random() * GLYPHS.length)],
+      speed: Math.random() * 0.4 + 0.1,
+      o: Math.random() * 0.12 + 0.04,
+      size: Math.random() * 8 + 9,
+      tick: 0,
+      interval: Math.floor(Math.random() * 120 + 60),
+    }))
+
+    stateRef.current = { W, H, nodes, glyphs, DIST }
+  }, [])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+
+    init(canvas)
+
+    const handleResize = () => init(canvas)
+    window.addEventListener('resize', handleResize, { passive: true })
+
+    const draw = () => {
+      const s = stateRef.current
+      if (!s) return
+      const { W, H, nodes, glyphs, DIST } = s
+
+      ctx.clearRect(0, 0, W, H)
+
+      // ── Lines ──
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x
+          const dy = nodes[i].y - nodes[j].y
+          const d  = Math.sqrt(dx * dx + dy * dy)
+          if (d < DIST) {
+            const alpha = (1 - d / DIST) * 0.18
+            ctx.beginPath()
+            ctx.strokeStyle = `rgba(${BRAND}, ${alpha})`
+            ctx.lineWidth   = 0.8
+            ctx.moveTo(nodes[i].x, nodes[i].y)
+            ctx.lineTo(nodes[j].x, nodes[j].y)
+            ctx.stroke()
+          }
+        }
+      }
+
+      // ── Nodes ──
+      nodes.forEach((n) => {
+        ctx.beginPath()
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(${BRAND}, ${n.o})`
+        ctx.fill()
+
+        // glow ring
+        ctx.beginPath()
+        ctx.arc(n.x, n.y, n.r + 2, 0, Math.PI * 2)
+        ctx.strokeStyle = `rgba(${BRAND}, ${n.o * 0.3})`
+        ctx.lineWidth   = 1
+        ctx.stroke()
+
+        // move
+        n.x += n.vx
+        n.y += n.vy
+        if (n.x < 0 || n.x > W) n.vx *= -1
+        if (n.y < 0 || n.y > H) n.vy *= -1
+      })
+
+      // ── Glyphs ──
+      glyphs.forEach((g) => {
+        ctx.font         = `${g.size}px 'Courier New', monospace`
+        ctx.fillStyle    = `rgba(${BRAND}, ${g.o})`
+        ctx.fillText(g.char, g.x, g.y)
+
+        g.y -= g.speed
+        g.tick++
+        if (g.tick >= g.interval) {
+          g.char     = GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
+          g.tick     = 0
+          g.interval = Math.floor(Math.random() * 120 + 60)
+        }
+        if (g.y < -20) {
+          g.y = H + 10
+          g.x = Math.random() * W
+        }
+      })
+
+      rafRef.current = requestAnimationFrame(draw)
+    }
+
+    rafRef.current = requestAnimationFrame(draw)
+
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [init])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 w-full h-full pointer-events-none"
+      style={{ zIndex: 0 }}
+    />
+  )
+}
 
 /* ─── DATA ─── */
 const sections = [
@@ -245,6 +380,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 antialiased">
+      <AnimatedBackground />
 
       {/* ─── NAVBAR ─── */}
       <nav
@@ -329,7 +465,7 @@ export default function App() {
       {/* ─── HERO ─── */}
       <header className="relative min-h-[100svh] flex items-center overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-50 via-white to-brand-50/30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-50/80 via-white/80 to-brand-50/30 backdrop-blur-[1px]" />
         <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand/[0.03] rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-brand/[0.04] rounded-full translate-y-1/3 -translate-x-1/4 blur-3xl" />
 
@@ -427,7 +563,7 @@ export default function App() {
 
       {/* ─── PROGRAMME ─── */}
       <section id="programme" className="relative py-16 sm:py-20 lg:py-28">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50/95 to-white/95" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section header */}
           <div className="text-center mb-10 sm:mb-14">
