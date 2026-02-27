@@ -538,7 +538,7 @@ const sections = [
       "Abonnement professionnel gratuit : Acc\u00e8s \u00e0 des plateformes technologiques pour renforcer les comp\u00e9tences.",
       "Valorisation des femmes en informatique : Activit\u00e9s et comp\u00e9titions d\u00e9di\u00e9es aux femmes.",
       "Sous-associations r\u00e9gionales : Promotion de la diversit\u00e9 culturelle (Merina, Sihanaka, etc.).",
-      "Partenariats linguistiques : Collaboration avec des \u00e9coles de langues comme ITTI, Alliance, BRINE.",
+      "Partenariats linguistiques : Collaboration avec des \u00e9coles de langues pour offrir des cours de langues \u00e0 prix r\u00e9duit.",
     ],
   },
 ]
